@@ -3,4 +3,4 @@ fastapi[all]
 sqlalchemy
 alembic
 databases
-psycopg2
+asyncpg
