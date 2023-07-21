@@ -1,28 +1,24 @@
-from sqlalchemy import create_engine, Column, Integer, Float, String, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Integer, String, Column, ForeignKey, MetaData
 
-engine = create_engine('postgresql://postgres:Pa$$w0rd@localhost/db')
+from .db import Base
 
-base = declarative_base()
-class Menu(base):
+
+
+class Menu(Base):
     __tablename__ = "menus"
-    
     id = Column(Integer, primary_key=True)
     title = Column(String(50), nullable=False)
     description = Column(String(150), nullable=False)
 
-class SubMenu(base):
+class SubMenu(Base):
     __tablename__ = "submenus"
-
     id = Column(Integer, primary_key=True)
     title = Column(String(50), nullable=False)
     description = Column(String(150), nullable=False)
     menu_id = Column(Integer, ForeignKey('menus.id'), nullable=False)
 
-class Dishes(base):
+class Dishes(Base):
     __tablename__ = "dishes"
-    
     id = Column(Integer, primary_key=True)
     title = Column(String(50), nullable=False)
     description = Column(String(150), nullable=False)

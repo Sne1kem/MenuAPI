@@ -1,28 +1,29 @@
-from fastapi import Body, FastAPI
+from fastapi import Body, FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+import sql_app.crud, sql_app.models, sql_app.schemas
+from sql_app.db import SessionLocal, engine
+
 from pydantic import BaseModel, Field
 import databases
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:Pa$$w0rd@localhost/db"
 
-database = databases.Database(SQLALCHEMY_DATABASE_URL)
-class Menu(BaseModel):
-    title: str
-    description: str
 
+metadata = sql_app.models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
+@app.post("/api/v1/menus", response_model=sql_app.schemas.Menu)
+def create_menu(menu: sql_app.schemas.MenuCreate, db: Session = Depends(get_db)):
+    return sql_app.crud.create_menu(db=db, menu=menu)
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.post("/api/v1/menus/")
-async def create_menu(menu: Menu):
-    return menu
+@app.get("/api/v1/menus", response_model=sql_app.schemas.Menu)
+def read_menus(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    menus = sql_app.crud.get_menu(db, skip=skip, limit=limit)
+    return menus

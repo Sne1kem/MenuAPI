@@ -2,3 +2,5 @@ uvicorn[standard]
 fastapi[all]
 sqlalchemy
 alembic
+databases
+psycopg2
