@@ -8,7 +8,7 @@ menu = Table(
     metadata,
     Column("id", UUID, primary_key=True, default=uuid.uuid4),
     Column("title", String, nullable=False),
-    Column("description", String, nullable=False)
+    Column("description", String, nullable=False),
 )
 
 submenu = Table(

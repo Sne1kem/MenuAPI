@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, insert, delete, update
+from sqlalchemy import select, insert, delete, update, join
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
@@ -25,8 +25,25 @@ async def get_menu(id, session: AsyncSession = Depends(get_async_session)):
     query = select(menu).where(menu.c.id == id)
     result = await session.execute(query)
     res = result.mappings().all()
+    query = select(submenu).where(submenu.c.menu_id == id)
+    result = await session.execute(query)
+    submenu_count = result.mappings().all()
+    dishes_count = 0
+    for i in submenu_count:
+        query = select(dishes).where(dishes.c.submenu_id == i['id'])
+        result = await session.execute(query)
+        resi = len(result.mappings().all())
+        dishes_count += resi
+    submenus_count = len(submenu_count)
     try:
-        return res[0]
+        res = dict(res[0])
+    except:
+        raise HTTPException(404, 'menu not found')
+    res['submenus_count'] = submenus_count
+    res['dishes_count'] = dishes_count
+    try:
+        if(res['id']):
+            return res
     except:
         raise HTTPException(404, 'menu not found')
 
@@ -61,8 +78,8 @@ async def update_menu(menu_id, new_data: MenuCreate, session: AsyncSession = Dep
 async def get_submenus(menu_id,session: AsyncSession = Depends(get_async_session)):
     query = select(submenu).where(submenu.c.menu_id == menu_id)
     result = await session.execute(query)
-    #res = result.mappings().all()
-    #return(res)
+    res = result.mappings().all()
+    return(res)
 
 @router.post("/{menu_id}/submenus", status_code=201)
 async def add_submenu(menu_id, new_submenu: SubMenuCreate, session: AsyncSession = Depends(get_async_session)):
@@ -81,8 +98,16 @@ async def get_submenu(menu_id, submenu_id, session: AsyncSession = Depends(get_a
     query = select(submenu).where(submenu.c.menu_id == menu_id, submenu.c.id == submenu_id)
     result = await session.execute(query)
     res = result.mappings().all()
+    query = select(dishes).where(dishes.c.submenu_id == submenu_id)
+    result = await session.execute(query)
+    dishes_count = len(result.mappings().all())
     try:
-        return res[0]
+        res = dict(res[0])
+    except:
+        raise HTTPException(404, 'submenu not found')
+    res['dishes_count'] = dishes_count
+    try:
+        return res
     except:
         raise HTTPException(404, 'submenu not found')
 
